@@ -1,0 +1,35 @@
+// tslint:disable
+/* eslint-disable */
+{{>licenseInfo}}
+import { {{#apiInfo}}{{#apis}}{{#operations}}{{classname}},{{/operations}}{{/apis}}{{/apiInfo}} } from './../api'
+import { {{#apiInfo}}{{#apis}}{{#operations}}{{classname}}FetchParamCreator,{{/operations}}{{/apis}}{{/apiInfo}} } from './../api'
+import { Configuration } from "../configuration";
+import { AxiosInstance } from "axios";
+
+{{#apiInfo}}{{#apis}}{{#operations}}
+interface {{classname}}Type {
+  api: {{classname}};
+  params: ReturnType<typeof {{classname}}FetchParamCreator>;
+  config: Configuration;
+}
+{{/operations}}{{/apis}}{{/apiInfo}}
+
+interface ServiceApiGroupType {
+  {{#apiInfo}}{{#apis}}{{#operations}}{{classname}}: {{classname}}Type;
+  {{/operations}}{{/apis}}{{/apiInfo}}
+}
+
+export const buildApi = (
+  basePath: string,
+  axios: AxiosInstance
+): ServiceApiGroupType => {
+  const configuration = new Configuration({ basePath });
+  return {
+    {{#apiInfo}}{{#apis}}{{#operations}}{{classname}}: {
+      api: new {{classname}}(configuration, basePath, axios),
+      params: {{classname}}FetchParamCreator(configuration),
+      config: configuration,
+    },
+    {{/operations}}{{/apis}}{{/apiInfo}}
+  };
+};

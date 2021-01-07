@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>swagger-codegen</title>
+    <style>
+        body,html{
+            padding: 0;
+            margin: 0;
+            background-color: #f6f6f6;
+        }
+        header{
+            padding: 20px;
+            background-color: #155263;
+            color: #ff9a3c;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        .container{
+            margin: 100px auto;width: 600px;padding: 38px;border-radius: 5px;box-shadow: 0 1px 3px rgba(26,26,26,.1);background-color: #fff
+        }
+        .row{
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .row-label{
+            width:120px;text-align:right;margin-right: 20px;line-height: 32px;
+        }
+        button{
+            background-color: #fff;border: 1px solid #d4d4d4;padding: 10px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:active{
+            box-shadow:  0 1px 3px rgba(26,26,26,.1);
+        }
+        button:focus{
+            outline: none!important;
+        }
+        .error-box{
+            display: none;
+            margin: 80px auto;
+            width: 700px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(26,26,26,.5);
+            background-color: #ff9a3c;
+            color: #fff;
+            min-height: 100px;
+            border-radius: 10px;
+            word-break: break-all;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+    </style>
+</head>
+<body>
+    <header>oraro-swagger-codegen</header>
+    <div class="container">
+            <div class="row">
+                <div class="row-label">目标语言:</div>
+                <div style="flex:1;">
+                    <select style="width: 100%;height: 32px;" id="languages">
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row-label">文档地址:</div>
+                <div style="flex:1;">
+                    <input id="fileUrl"  style="width: 100%;height: 28px;" value="">
+                </div>
+            </div>
+            <div style="text-align:center;margin-top:30px;"><button id="submit-btn">生成文档</button></div>
+    </div>
+    <div id="error-box" class="error-box"></div>
+<script>
+    const protocol = 'http://';
+    const targetServer = '10.34.9.114';
+    const targetPort = 3000;
+
+    const uri = ''.concat(protocol,targetServer,).concat(":").concat(targetPort)
+
+    fetch(`${uri}/main/languages`).then(v=>{
+        return v.json()
+    }).then(data=>{
+        const {data:list} = data
+        const select = document.getElementById('languages')
+        list.forEach(v=>{
+            select.insertAdjacentHTML('beforeend',`<option>${v.name}</option>`)
+        })
+    })
+
+    const generateApis = async ()=>{}
+
+    let submitDebounce = false
+    document.getElementById('submit-btn').addEventListener('click',async  ()=>{
+        if(submitDebounce) return;
+        submitDebounce = true;
+        document.getElementById('submit-btn').setAttribute('disabled','')
+        document.getElementById('submit-btn').innerText = '文档生成中...'
+        await generate()
+            .then(res=> {
+                if(!res) return;
+                if(res.status<200||res.status>=300){
+                    res.json().then(data=>{
+                        document.getElementById('error-box').style.display = 'block';
+                        document.getElementById('error-box').innerText = data.message;
+                    })
+                    return;
+                }
+                res.text().then(downloadUrl=>{
+                    download(downloadUrl)
+                    document.getElementById('error-box').style.display = 'none'
+                })
+            })
+
+        document.getElementById('submit-btn').innerText = '生成文档'
+        document.getElementById('submit-btn').removeAttribute('disabled')
+        submitDebounce = false;
+    })
+
+    const download = (url)=>{
+        const aNode = document.createElement('A')
+        aNode.download = url.split('/').pop();
+        aNode.href = uri+url;
+        aNode.click();
+    }
+
+    const generate = async ()=>{
+        const language = document.getElementById('languages').value
+        const fileUrl = document.getElementById('fileUrl').value
+        if(!language||!fileUrl){
+            alert('目标语言和swagger地址都不能为空！');
+            return;
+        }
+        return await fetch(`${uri}/main/generateApis`,{
+            method:'POST',
+            headers:{
+                'content-type': 'application/json'
+            },
+            body:JSON.stringify({
+                language,fileUrl
+            })
+        })
+    }
+
+</script>
+</body>
+</html>
