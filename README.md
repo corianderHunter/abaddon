@@ -4,5 +4,5 @@
 
 ## 说明
 
-- 根据 ORIGINREADME.md 编译 swagger-code jar 包
+- 根据 ORIGINREADME.md说明先编译 swagger-code jar 包
 - codegen-client 服务见 client-client/REAMDE.md
